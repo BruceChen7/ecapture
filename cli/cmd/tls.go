@@ -16,21 +16,24 @@ package cmd
 
 import (
 	"context"
-	"ecapture/pkg/util/kernel"
-	"ecapture/user/config"
-	"ecapture/user/module"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
+	"ecapture/pkg/util/kernel"
+	"ecapture/user/config"
+	"ecapture/user/module"
+
 	"github.com/spf13/cobra"
 )
 
-var oc = config.NewOpensslConfig()
-var gc = config.NewGnutlsConfig()
-var nc = config.NewNsprConfig()
+var (
+	oc = config.NewOpensslConfig()
+	gc = config.NewGnutlsConfig()
+	nc = config.NewNsprConfig()
+)
 
 // opensslCmd represents the openssl command
 var opensslCmd = &cobra.Command{
@@ -42,7 +45,7 @@ ecapture tls
 ecapture tls --hex --pid=3423
 ecapture tls -l save.log --pid=3423
 ecapture tls --libssl=/lib/x86_64-linux-gnu/libssl.so.1.1
-ecapture tls -w save_3_0_5.pcapng --ssl_version="openssl 3.0.5" --libssl=/lib/x86_64-linux-gnu/libssl.so.3 
+ecapture tls -w save_3_0_5.pcapng --ssl_version="openssl 3.0.5" --libssl=/lib/x86_64-linux-gnu/libssl.so.3
 ecapture tls -w save_android.pcapng -i wlan0 --libssl=/apex/com.android.conscrypt/lib64/libssl.so --ssl_version="boringssl 1.1.1" --port 443
 `,
 	Run: openSSLCommandFunc,
@@ -60,6 +63,7 @@ func init() {
 	opensslCmd.PersistentFlags().Uint16Var(&oc.Port, "port", 443, "port number to capture, default:443.")
 	opensslCmd.PersistentFlags().StringVar(&oc.SslVersion, "ssl_version", "", "openssl/boringssl version， e.g: --ssl_version=\"openssl 1.1.1g\" or  --ssl_version=\"boringssl 1.1.1\"")
 
+	// subcommand
 	rootCmd.AddCommand(opensslCmd)
 }
 
@@ -76,6 +80,7 @@ func openSSLCommandFunc(command *cobra.Command, args []string) {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	// set log files
 	if gConf.loggerFile != "" {
 		f, e := os.Create(gConf.loggerFile)
 		if e != nil {
@@ -96,9 +101,10 @@ func openSSLCommandFunc(command *cobra.Command, args []string) {
 	} else {
 		modNames = []string{module.ModuleNameOpenssl, module.ModuleNameGnutls, module.ModuleNameNspr}
 	}
+	logger.Printf("ElfArchIsandroid %v", modNames)
 
 	var runMods uint8
-	var runModules = make(map[string]module.IModule)
+	runModules := make(map[string]module.IModule)
 	var wg sync.WaitGroup
 
 	for _, modName := range modNames {
@@ -141,7 +147,7 @@ func openSSLCommandFunc(command *cobra.Command, args []string) {
 
 		logger.Printf("%s\tmodule initialization", mod.Name())
 
-		//初始化
+		// 初始化
 		err = mod.Init(ctx, logger, conf)
 		if err != nil {
 			logger.Printf("%s\tmodule initialization failed, [skip it]. error:%+v", mod.Name(), err)

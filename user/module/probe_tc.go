@@ -2,16 +2,18 @@ package module
 
 import (
 	"bytes"
-	"ecapture/user/event"
 	"fmt"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
 	"math"
 	"net"
 	"os"
 	"sync"
 	"time"
+
+	"ecapture/user/event"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcapgo"
 )
 
 // packets of TC probe
@@ -30,8 +32,8 @@ func (NetCaptureData) GetSizeBytes() uint32 {
 }
 
 type MTCProbe struct {
-	//logger          *log.Logger
-	//mName           string
+	// logger          *log.Logger
+	// mName           string
 	pcapngFilename  string
 	ifIdex          int
 	ifName          string
@@ -44,7 +46,7 @@ type MTCProbe struct {
 }
 
 func (t *MTCProbe) dumpTcSkb(tcEvent *event.TcSkbEvent) error {
-	var timeStamp = t.bootTime + tcEvent.Ts
+	timeStamp := t.bootTime + tcEvent.Ts
 	return t.writePacket(tcEvent.Len, time.Unix(0, int64(timeStamp)), tcEvent.Payload())
 }
 
@@ -72,7 +74,7 @@ func (t *MTCProbe) savePcapng() (i int, err error) {
 }
 
 func (t *MTCProbe) createPcapng(netIfs []net.Interface) error {
-	pcapFile, err := os.OpenFile(t.pcapngFilename, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+	pcapFile, err := os.OpenFile(t.pcapngFilename, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0o644)
 	if err != nil {
 		return fmt.Errorf("error creating pcap file: %v", err)
 	}

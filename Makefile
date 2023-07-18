@@ -377,7 +377,8 @@ assets_nocore: \
 build: \
 	.checkver_$(CMD_GO) \
 	assets
-	CGO_ENABLED=0 $(CMD_GO) build -tags $(TARGET_TAG) -ldflags "-w -s -X 'ecapture/cli/cmd.GitVersion=$(TARGET_TAG)_$(UNAME_M):$(VERSION):[CORE]'" -o bin/ecapture .
+	# CGO_ENABLED=0 $(CMD_GO) build -tags $(TARGET_TAG) -ldflags "-w -s -X 'ecapture/cli/cmd.GitVersion=$(TARGET_TAG)_$(UNAME_M):$(VERSION):[CORE]'" -o bin/ecapture .
+	CGO_ENABLED=0 $(CMD_GO) build -tags $(TARGET_TAG) -ldflags "-X 'ecapture/cli/cmd.GitVersion=$(TARGET_TAG)_$(UNAME_M):$(VERSION):[CORE]'" -o bin/ecapture .
 
 
 # FOR NON-CORE

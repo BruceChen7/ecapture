@@ -86,7 +86,7 @@ func (this *HTTPResponse) Write(b []byte) (int, error) {
 	this.receivedLen += int64(l)
 
 	// 检测是否接收完整个包
-	//if this.response.ContentLength >= this.receivedLen {
+	// if this.response.ContentLength >= this.receivedLen {
 	if false {
 		this.isDone = true
 	}
@@ -132,11 +132,11 @@ func (this *HTTPResponse) Display() []byte {
 		this.packerType = PacketTypeGzip
 		defer reader.Close()
 	default:
-		//reader = this.response.Body
+		// reader = this.response.Body
 		this.packerType = PacketTypeNull
-		//log.Println("not gzip content")
-		//TODO for debug
-		//return []byte("")
+		// log.Println("not gzip content")
+		// TODO for debug
+		// return []byte("")
 	}
 	headerMap := bytes.NewBufferString("")
 	for k, v := range this.response.Header {

@@ -55,7 +55,6 @@ func (te *TcSkbEvent) Decode(payload []byte) (err error) {
 	if err = binary.Read(buf, binary.LittleEndian, &tmpData); err != nil {
 		return
 	}
-	te.payload = tmpData
 	return nil
 }
 
@@ -67,7 +66,6 @@ func (te *TcSkbEvent) StringHex() string {
 }
 
 func (te *TcSkbEvent) String() string {
-
 	s := fmt.Sprintf("Pid:%d, Comm:%s, Length:%d, Ifindex:%d, Payload:[internal data]", te.Pid, te.Comm, te.Len, te.Ifindex)
 	return s
 }

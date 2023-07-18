@@ -65,6 +65,7 @@ func (this *HTTPRequest) Write(b []byte) (int, error) {
 	}
 
 	// 如果已初始化
+	// 将b append 到reader中
 	l, e := this.reader.Write(b)
 	if e != nil {
 		return 0, e
@@ -79,7 +80,7 @@ func (this *HTTPRequest) Write(b []byte) (int, error) {
 }
 
 func (this *HTTPRequest) detect(payload []byte) error {
-	//this.Init()
+	// this.Init()
 	rd := bytes.NewReader(payload)
 	buf := bufio.NewReader(rd)
 	req, err := http.ReadRequest(buf)

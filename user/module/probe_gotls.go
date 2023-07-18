@@ -4,10 +4,6 @@ package module
 import (
 	"bytes"
 	"context"
-	"ecapture/assets"
-	"ecapture/pkg/proc"
-	"ecapture/user/config"
-	"ecapture/user/event"
 	"errors"
 	"fmt"
 	"log"
@@ -16,6 +12,11 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"ecapture/assets"
+	"ecapture/pkg/proc"
+	"ecapture/user/config"
+	"ecapture/user/event"
 
 	"github.com/cilium/ebpf"
 	manager "github.com/gojue/ebpfmanager"
@@ -32,9 +33,7 @@ const (
 	goTlsMasterSecretFunc = "crypto/tls.(*Config).writeKeyLog"
 )
 
-var (
-	NotGoCompiledBin = errors.New("It is not a program compiled in the Go language.")
-)
+var NotGoCompiledBin = errors.New("It is not a program compiled in the Go language.")
 
 // GoTLSProbe represents a probe for Go SSL
 type GoTLSProbe struct {
@@ -74,13 +73,13 @@ func (g *GoTLSProbe) Init(ctx context.Context, l *log.Logger, cfg config.IConfig
 	}
 
 	g.keyloggerFilename = MasterSecretKeyLogName
-	file, err := os.OpenFile(g.keyloggerFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	file, err := os.OpenFile(g.keyloggerFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
 	g.keylogger = file
 
-	var writeFile = g.conf.(*config.GoTLSConfig).Write
+	writeFile := g.conf.(*config.GoTLSConfig).Write
 	if len(writeFile) > 0 {
 		g.eBPFProgramType = EbpfprogramtypeOpensslTc
 		fileInfo, err := filepath.Abs(writeFile)
@@ -135,7 +134,7 @@ func (g *GoTLSProbe) start() error {
 		return err
 	}
 
-	var bpfFileName = g.geteBPFName("user/bytecode/gotls_kern.o")
+	bpfFileName := g.geteBPFName("user/bytecode/gotls_kern.o")
 	g.logger.Printf("%s\tBPF bytecode filename:%s\n", g.Name(), bpfFileName)
 	byteBuf, err := assets.Asset(bpfFileName)
 	if err != nil {
@@ -214,9 +213,9 @@ func (g *GoTLSProbe) setupManagersUprobe() error {
 	}
 
 	readOffsets := g.conf.(*config.GoTLSConfig).ReadTlsAddrs
-	//g.bpfManager.Probes = []*manager.Probe{}
+	// g.bpfManager.Probes = []*manager.Probe{}
 	for _, v := range readOffsets {
-		var uid = fmt.Sprintf("%s_%d", readFn, v)
+		uid := fmt.Sprintf("%s_%d", readFn, v)
 		g.logger.Printf("%s\tadd uretprobe function :%s, offset:0x%X\n", g.Name(), config.GoTlsReadFunc, v)
 		g.bpfManager.Probes = append(g.bpfManager.Probes, &manager.Probe{
 			Section:          readSec,
@@ -251,11 +250,11 @@ func (g *GoTLSProbe) setupManagersUprobe() error {
 
 // 通过elf的常量替换方式传递数据
 func (g *GoTLSProbe) constantEditor() []manager.ConstantEditor {
-	var editor = []manager.ConstantEditor{
+	editor := []manager.ConstantEditor{
 		{
 			Name:  "target_pid",
 			Value: uint64(g.conf.GetPid()),
-			//FailOnMissing: true,
+			// FailOnMissing: true,
 		},
 		{
 			Name:  "target_uid",
@@ -283,7 +282,6 @@ func (g *GoTLSProbe) constantEditor() []manager.ConstantEditor {
 }
 
 func (g *GoTLSProbe) initDecodeFun() error {
-
 	m, found, err := g.bpfManager.GetMap("events")
 	if err != nil {
 		return err
@@ -294,7 +292,7 @@ func (g *GoTLSProbe) initDecodeFun() error {
 
 	g.eventMaps = append(g.eventMaps, m)
 	gotlsEvent := &event.GoTLSEvent{}
-	//sslEvent.SetModule(g)
+	// sslEvent.SetModule(g)
 	g.eventFuncMaps[m] = gotlsEvent
 	// master secrets map at ebpf code
 	MasterkeyEventsMap, found, err := g.bpfManager.GetMap("mastersecret_go_events")
@@ -321,7 +319,6 @@ func (g *GoTLSProbe) DecodeFun(m *ebpf.Map) (event.IEventStruct, bool) {
 }
 
 func (g *GoTLSProbe) Close() error {
-
 	if g.eBPFProgramType == EbpfprogramtypeOpensslTc {
 		g.logger.Printf("%s\tsaving pcapng file %s\n", g.Name(), g.pcapngFilename)
 		i, err := g.savePcapng()
@@ -348,7 +345,7 @@ func (g *GoTLSProbe) saveMasterSecret(secretEvent *event.MasterSecretGotlsEvent)
 	clientRandom = string(secretEvent.ClientRandom[0:secretEvent.ClientRandomLen])
 	secret = string(secretEvent.MasterSecret[0:secretEvent.MasterSecretLen])
 
-	var k = fmt.Sprintf("%s-%02x", label, clientRandom)
+	k := fmt.Sprintf("%s-%02x", label, clientRandom)
 
 	_, f := g.masterSecrets[k]
 	if f {
@@ -365,13 +362,13 @@ func (g *GoTLSProbe) saveMasterSecret(secretEvent *event.MasterSecretGotlsEvent)
 		g.logger.Fatalf("%s: save masterSecrets to file error:%s", secretEvent.String(), e.Error())
 		return
 	}
+	// save client randomly
 	g.logger.Printf("%s: save CLIENT_RANDOM %02x to file success, %d bytes", label, clientRandom, l)
 	e = g.savePcapngSslKeyLog([]byte(b))
 	if e != nil {
 		g.logger.Fatalf("%s: save masterSecrets to pcapng error:%s", secretEvent.String(), e.Error())
 		return
 	}
-
 }
 
 func (g *GoTLSProbe) Dispatcher(eventStruct event.IEventStruct) {
@@ -385,5 +382,5 @@ func (g *GoTLSProbe) Dispatcher(eventStruct event.IEventStruct) {
 			g.logger.Printf("%s\t save packet error %s .\n", g.Name(), err.Error())
 		}
 	}
-	//g.logger.Println(eventStruct)
+	// g.logger.Println(eventStruct)
 }

@@ -237,6 +237,8 @@ int probe_ret_SSL_write(struct pt_regs* ctx) {
         u32 fd = active_ssl_buf_t->fd;
         s32 version = active_ssl_buf_t->version;
         bpf_probe_read(&buf, sizeof(const char*), &active_ssl_buf_t->buf);
+        // 的确是明文的
+        bpf_printk("openssl uretprobe SSL_write buf:%s", &active_ssl_buf_t->buf);
         process_SSL_data(ctx, current_pid_tgid, kSSLWrite, buf, fd, version);
     }
     bpf_map_delete_elem(&active_ssl_write_args_map, &current_pid_tgid);
@@ -311,6 +313,7 @@ int probe_ret_SSL_read(struct pt_regs* ctx) {
         u32 fd = active_ssl_buf_t->fd;
         s32 version = active_ssl_buf_t->version;
         bpf_probe_read(&buf, sizeof(const char*), &active_ssl_buf_t->buf);
+        bpf_printk("openssl uretprobe SSL_read buf:%s", buf);
         process_SSL_data(ctx, current_pid_tgid, kSSLRead, buf, fd, version);
     }
     bpf_map_delete_elem(&active_ssl_read_args_map, &current_pid_tgid);

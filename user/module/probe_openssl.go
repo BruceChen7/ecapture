@@ -510,6 +510,7 @@ func (m *MOpenSSLProbe) saveMasterSecret(secretEvent *event.MasterSecretEvent) {
 		}
 	default:
 	}
+	m.logger.Printf("%s: tosave masterSecret", v.String())
 	m.logger.Printf("%s: save CLIENT_RANDOM %02x to file success, %d bytes", v.String(), secretEvent.ClientRandom, l)
 }
 
@@ -567,6 +568,7 @@ func (m *MOpenSSLProbe) saveMasterSecretBSSL(secretEvent *event.MasterSecretBSSL
 	switch m.eBPFProgramType {
 	case EbpfprogramtypeOpensslTc:
 		m.logger.Printf("%s: save CLIENT_RANDOM %02x to file success, %d bytes", v.String(), secretEvent.ClientRandom, l)
+		m.logger.Printf("opensslTc: %s: save CLIENT_RAND", v.String())
 		e = m.savePcapngSslKeyLog(b.Bytes())
 		if e != nil {
 			m.logger.Fatalf("%s: save CLIENT_RANDOM to pcapng error:%s", v.String(), e.Error())

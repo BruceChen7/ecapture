@@ -15,13 +15,13 @@
 package event_processor
 
 import (
-	"ecapture/user/event"
 	"encoding/hex"
 	"time"
+
+	"ecapture/user/event"
 )
 
 type IWorker interface {
-
 	// 定时器1 ，定时判断没有后续包，则解析输出
 
 	// 定时器2， 定时判断没后续包，则通知上层销毁自己
@@ -34,12 +34,12 @@ type IWorker interface {
 const (
 	MaxTickerCount = 10 // 1 Sencond/(eventWorker.ticker.C) = 10
 	MaxChanLen     = 16 // 包队列长度
-	//MAX_EVENT_LEN    = 16 // 事件数组长度
+	// MAX_EVENT_LEN    = 16 // 事件数组长度
 )
 
 type eventWorker struct {
 	incoming chan event.IEventStruct
-	//events      []user.IEventStruct
+	// events      []user.IEventStruct
 	status      ProcessStatus
 	packetType  PacketType
 	ticker      *time.Ticker
@@ -79,8 +79,8 @@ func (this *eventWorker) Write(e event.IEventStruct) error {
 func (this *eventWorker) Display() {
 	// 解析器类型检测
 	if this.parser.ParserType() != ParserTypeHttpResponse {
-		//临时调试开关
-		//return
+		// 临时调试开关
+		// return
 	}
 
 	//  输出包内容
@@ -123,6 +123,8 @@ func (this *eventWorker) parserEvent(e event.IEventStruct) {
 
 	// 是否接收完成，能否输出
 	if this.parser.IsDone() {
+		this.processor.logger.Printf("parser is done %s", this.parser.Name())
+		// 结束，展示内容
 		this.Display()
 	}
 }
@@ -134,6 +136,7 @@ func (this *eventWorker) Run() {
 			// 输出包
 			if this.tickerCount > MaxTickerCount {
 				this.processor.GetLogger().Printf("eventWorker TickerCount > %d, event closed.", MaxTickerCount)
+				// 输出http的包结果
 				this.Close()
 				return
 			}
@@ -144,12 +147,12 @@ func (this *eventWorker) Run() {
 			this.parserEvent(e)
 		}
 	}
-
 }
 
 func (this *eventWorker) Close() {
 	// 即将关闭， 必须输出结果
 	this.ticker.Stop()
+	// 关闭，必须输出结果
 	this.Display()
 	this.tickerCount = 0
 	this.processor.delWorkerByUUID(this)
